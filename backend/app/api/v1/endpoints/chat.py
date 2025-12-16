@@ -16,6 +16,7 @@ from app.models.conversation import Conversation as ConversationModel, Message a
 from app.models.user import User
 from app.models.organization import Organization
 from app.api.v1.dependencies.auth import get_current_user, get_current_organization
+from app.services.chat_service import ChatService
 import uuid
 
 router = APIRouter()
@@ -177,12 +178,22 @@ async def chat(
         content=chat_request.message
     )
     db.add(user_message)
+    await db.flush()
+    
+    chat_service = ChatService()
+    answer, sources = await chat_service.generate_answer(
+        query=chat_request.message,
+        organization_id=organization.id,
+        conversation_id=conversation.id,
+        db=db
+    )
     
     assistant_message = MessageModel(
         id=str(uuid.uuid4()),
         conversation_id=conversation.id,
         role="assistant",
-        content="This is a placeholder response. RAG implementation coming soon."
+        content=answer,
+        sources=sources
     )
     db.add(assistant_message)
     
@@ -192,6 +203,6 @@ async def chat(
     return ChatResponse(
         conversation_id=conversation.id,
         message=assistant_message,
-        sources=[]
+        sources=sources
     )
 

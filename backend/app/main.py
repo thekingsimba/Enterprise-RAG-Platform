@@ -15,6 +15,13 @@ redis_client = None
 async def lifespan(app: FastAPI):
     global redis_client
     redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+    
+    if settings.ENVIRONMENT == "development":
+        from app.db.session import AsyncSessionLocal
+        from app.db.init_db import init_db
+        async with AsyncSessionLocal() as db:
+            await init_db(db)
+    
     yield
     await redis_client.close()
 

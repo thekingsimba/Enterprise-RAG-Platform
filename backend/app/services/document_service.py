@@ -79,7 +79,10 @@ class DocumentService:
                     {
                         "document_id": document_id,
                         "chunk_index": idx,
-                        "organization_id": document.organization_id
+                        "organization_id": document.organization_id,
+                        "filename": document.filename,
+                        "content": chunk["content"],
+                        "page_number": chunk["metadata"].get("page_number")
                     }
                 ))
             

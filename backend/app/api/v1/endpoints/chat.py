@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from typing import List
+import json
 
 from app.db.session import get_db
 from app.schemas.chat import (
@@ -17,6 +19,7 @@ from app.models.user import User
 from app.models.organization import Organization
 from app.api.v1.dependencies.auth import get_current_user, get_current_organization
 from app.services.chat_service import ChatService
+from app.services.rag_workflow import RAGWorkflow
 import uuid
 
 router = APIRouter()
@@ -204,5 +207,159 @@ async def chat(
         conversation_id=conversation.id,
         message=assistant_message,
         sources=sources
+    )
+
+
+@router.post("/chat/stream")
+async def chat_stream(
+    chat_request: ChatRequest,
+    current_user: User = Depends(get_current_user),
+    organization: Organization = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db)
+):
+    if chat_request.conversation_id:
+        result = await db.execute(
+            select(ConversationModel).where(
+                ConversationModel.id == chat_request.conversation_id,
+                ConversationModel.user_id == current_user.id
+            )
+        )
+        conversation = result.scalar_one_or_none()
+        
+        if not conversation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found"
+            )
+    else:
+        conversation = ConversationModel(
+            id=str(uuid.uuid4()),
+            organization_id=organization.id,
+            user_id=current_user.id,
+            title=chat_request.message[:50]
+        )
+        db.add(conversation)
+        await db.flush()
+    
+    user_message = MessageModel(
+        id=str(uuid.uuid4()),
+        conversation_id=conversation.id,
+        role="user",
+        content=chat_request.message
+    )
+    db.add(user_message)
+    await db.commit()
+    
+    async def generate():
+        try:
+            chat_service = ChatService()
+            
+            context, sources = await chat_service.retrieve_context(
+                query=chat_request.message,
+                organization_id=organization.id,
+                top_k=5
+            )
+            
+            chat_history = []
+            if conversation.id:
+                chat_history = await chat_service.get_chat_history(conversation.id, db)
+            
+            yield f"data: {json.dumps({'type': 'sources', 'data': sources})}\n\n"
+            
+            full_response = ""
+            async for chunk in chat_service.llm_service.generate_response_stream(
+                query=chat_request.message,
+                context=context,
+                chat_history=chat_history
+            ):
+                full_response += chunk
+                yield f"data: {json.dumps({'type': 'token', 'data': chunk})}\n\n"
+            
+            assistant_message = MessageModel(
+                id=str(uuid.uuid4()),
+                conversation_id=conversation.id,
+                role="assistant",
+                content=full_response,
+                sources=sources
+            )
+            db.add(assistant_message)
+            await db.commit()
+            
+            yield f"data: {json.dumps({'type': 'done', 'conversation_id': conversation.id})}\n\n"
+            
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@router.post("/chat/workflow", response_model=ChatResponse)
+async def chat_with_workflow(
+    chat_request: ChatRequest,
+    current_user: User = Depends(get_current_user),
+    organization: Organization = Depends(get_current_organization),
+    db: AsyncSession = Depends(get_db)
+):
+    if chat_request.conversation_id:
+        result = await db.execute(
+            select(ConversationModel).where(
+                ConversationModel.id == chat_request.conversation_id,
+                ConversationModel.user_id == current_user.id
+            )
+        )
+        conversation = result.scalar_one_or_none()
+        
+        if not conversation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Conversation not found"
+            )
+    else:
+        conversation = ConversationModel(
+            id=str(uuid.uuid4()),
+            organization_id=organization.id,
+            user_id=current_user.id,
+            title=chat_request.message[:50]
+        )
+        db.add(conversation)
+        await db.flush()
+    
+    user_message = MessageModel(
+        id=str(uuid.uuid4()),
+        conversation_id=conversation.id,
+        role="user",
+        content=chat_request.message
+    )
+    db.add(user_message)
+    await db.flush()
+    
+    chat_service = ChatService()
+    chat_history = []
+    if conversation.id:
+        chat_history = await chat_service.get_chat_history(conversation.id, db)
+    
+    workflow = RAGWorkflow()
+    result = await workflow.run(
+        query=chat_request.message,
+        organization_id=organization.id,
+        chat_history=chat_history
+    )
+    
+    assistant_message = MessageModel(
+        id=str(uuid.uuid4()),
+        conversation_id=conversation.id,
+        role="assistant",
+        content=result["answer"],
+        sources=result["sources"]
+    )
+    db.add(assistant_message)
+    
+    await db.commit()
+    await db.refresh(assistant_message)
+    
+    return ChatResponse(
+        conversation_id=conversation.id,
+        message=assistant_message,
+        sources=result["sources"]
     )
 

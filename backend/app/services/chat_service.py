@@ -40,15 +40,23 @@ class ChatService:
                 metadata = match.metadata
                 score = match.score
                 
+                content = metadata.get("content", match.id)
+                filename = metadata.get("filename", "Unknown")
+                
                 context_parts.append(
-                    f"[Source {idx + 1}] (Relevance: {score:.2f})\n{match.id}\n"
+                    f"[Document {idx + 1}]\n"
+                    f"Source: {filename}\n"
+                    f"Content: {content}\n"
+                    f"Relevance: {score:.2f}\n"
                 )
                 
                 sources.append({
                     "chunk_id": match.id,
                     "document_id": metadata.get("document_id"),
-                    "score": score,
-                    "metadata": metadata
+                    "filename": filename,
+                    "score": float(score),
+                    "content": content[:200],
+                    "page_number": metadata.get("page_number")
                 })
             
             context = "\n\n".join(context_parts)

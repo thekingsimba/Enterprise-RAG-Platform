@@ -36,7 +36,7 @@ class Document(Base):
     title = Column(String(500))
     description = Column(Text)
     tags = Column(JSON, default=list)
-    metadata = Column(JSON, default=dict)
+    doc_metadata = Column(JSON, default=dict)
     
     error_message = Column(Text)
     
@@ -62,7 +62,7 @@ class DocumentChunk(Base):
     page_number = Column(Integer)
     start_char = Column(Integer)
     end_char = Column(Integer)
-    metadata = Column(JSON, default=dict)
+    chunk_metadata = Column(JSON, default=dict)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     

@@ -2,13 +2,28 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import redis.asyncio as redis
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.core.config import settings
 from app.api.v1.api import api_router
 from app.middleware.logging_middleware import LoggingMiddleware
 from app.middleware.rate_limiter import RateLimitMiddleware
+from app.middleware.prometheus_middleware import PrometheusMiddleware
 
 redis_client = None
+
+if settings.ENVIRONMENT == "production" and hasattr(settings, 'SENTRY_DSN') and settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        integrations=[
+            FastApiIntegration(),
+            SqlalchemyIntegration(),
+        ],
+        traces_sample_rate=0.1,
+        environment=settings.ENVIRONMENT,
+    )
 
 
 @asynccontextmanager
@@ -42,6 +57,7 @@ app.add_middleware(
 )
 
 app.add_middleware(LoggingMiddleware)
+app.add_middleware(PrometheusMiddleware)
 
 
 @app.get("/")

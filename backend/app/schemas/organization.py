@@ -31,7 +31,7 @@ class OrganizationInDB(OrganizationBase):
     current_documents: int
     current_storage_mb: int
     current_users: int
-    settings: Dict[str, Any]
+    org_settings: Dict[str, Any]
     created_at: datetime
     updated_at: Optional[datetime] = None
 

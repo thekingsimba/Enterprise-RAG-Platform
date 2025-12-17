@@ -27,7 +27,7 @@ class Organization(Base):
     current_storage_mb = Column(Integer, default=0)
     current_users = Column(Integer, default=0)
     
-    settings = Column(JSON, default=dict)
+    org_settings = Column(JSON, default=dict)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     

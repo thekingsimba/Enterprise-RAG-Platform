@@ -65,6 +65,8 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP: int = 200
 
     MLFLOW_TRACKING_URI: str = "http://localhost:5000"
+    
+    SENTRY_DSN: str = ""
 
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100

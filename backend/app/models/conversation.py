@@ -19,7 +19,7 @@ class Conversation(Base):
     title = Column(String(500))
     is_archived = Column(Boolean, default=False)
     
-    metadata = Column(JSON, default=dict)
+    conv_metadata = Column(JSON, default=dict)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -40,7 +40,7 @@ class Message(Base):
     
     sources = Column(JSON, default=list)
     
-    metadata = Column(JSON, default=dict)
+    msg_metadata = Column(JSON, default=dict)
     tokens_used = Column(Integer)
     cost = Column(Integer)
     

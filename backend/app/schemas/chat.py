@@ -16,7 +16,7 @@ class MessageInDB(MessageBase):
     id: str
     conversation_id: str
     sources: List[Dict[str, Any]]
-    metadata: Dict[str, Any]
+    msg_metadata: Dict[str, Any]
     tokens_used: Optional[int] = None
     cost: Optional[int] = None
     created_at: datetime
@@ -47,7 +47,7 @@ class ConversationInDB(ConversationBase):
     organization_id: str
     user_id: str
     is_archived: bool
-    metadata: Dict[str, Any]
+    conv_metadata: Dict[str, Any]
     created_at: datetime
     updated_at: Optional[datetime] = None
 

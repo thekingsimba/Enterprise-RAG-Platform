@@ -14,6 +14,8 @@ from app.models.organization import Organization
 from app.api.v1.dependencies.auth import get_current_user, get_current_organization
 from app.core.config import settings
 from app.services.storage_service import StorageService
+from app.services.usage_tracking_service import UsageTrackingService
+from app.utils.file_validator import FileValidator
 from app.worker import process_document_task
 import uuid
 
@@ -149,10 +151,14 @@ async def upload_document(
     file_content = await file.read()
     file_size = len(file_content)
     
-    if file_size > settings.MAX_FILE_SIZE:
+    is_valid, validation_message = FileValidator.validate_file(
+        file_content, file.filename, settings.MAX_FILE_SIZE
+    )
+    
+    if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File size exceeds maximum allowed size of {settings.MAX_FILE_SIZE} bytes"
+            detail=validation_message
         )
     
     document = DocumentModel(
@@ -189,6 +195,8 @@ async def upload_document(
             organization.current_documents += 1
             organization.current_storage_mb += file_size / (1024 * 1024)
             await db.commit()
+            
+            await UsageTrackingService.track_document_upload(db, organization.id)
         else:
             document.status = DocumentStatus.FAILED
             document.error_message = "Failed to upload to S3"

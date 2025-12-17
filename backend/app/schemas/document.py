@@ -31,7 +31,7 @@ class DocumentInDB(DocumentBase):
     status: DocumentStatus
     num_chunks: int
     num_pages: Optional[int] = None
-    metadata: Dict[str, Any]
+    doc_metadata: Dict[str, Any]
     error_message: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
@@ -61,7 +61,7 @@ class DocumentChunk(DocumentChunkBase):
     id: str
     document_id: str
     vector_id: Optional[str] = None
-    metadata: Dict[str, Any]
+    chunk_metadata: Dict[str, Any]
     created_at: datetime
 
     class Config:

@@ -54,3 +54,4 @@ vector_search_duration_seconds = Histogram(
 async def metrics():
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
+

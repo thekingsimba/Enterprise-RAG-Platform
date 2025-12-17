@@ -8,3 +8,4 @@ fi
 cd "$(dirname "$0")/.."
 alembic revision --autogenerate -m "$1"
 
+

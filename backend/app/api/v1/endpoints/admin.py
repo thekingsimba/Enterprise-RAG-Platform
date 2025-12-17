@@ -193,3 +193,4 @@ async def get_document_stats(
         "total_size_mb": round(total_size / (1024 * 1024), 2)
     }
 
+

@@ -86,3 +86,4 @@ async def auth_headers(client: AsyncClient, test_user):
     token = create_access_token(data={"sub": test_user.id})
     return {"Authorization": f"Bearer {token}"}
 
+

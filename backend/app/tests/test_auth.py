@@ -91,3 +91,4 @@ async def test_refresh_token(client: AsyncClient, test_user):
     assert "access_token" in data
     assert "refresh_token" in data
 
+

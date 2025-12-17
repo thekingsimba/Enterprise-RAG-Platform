@@ -73,3 +73,4 @@ class FileValidator:
             "size_mb": round(len(file_content) / (1024 * 1024), 2)
         }
 
+

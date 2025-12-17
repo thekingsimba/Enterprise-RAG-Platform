@@ -1,6 +1,8 @@
+from typing import Callable
+
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from typing import Callable
+
 from app.db.session import AsyncSessionLocal
 from app.services.usage_tracking_service import UsageTrackingService
 import logging

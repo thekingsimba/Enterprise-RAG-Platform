@@ -104,3 +104,4 @@ async def test_delete_document(client: AsyncClient, auth_headers, db_session, te
     )
     assert response.status_code == 204
 
+

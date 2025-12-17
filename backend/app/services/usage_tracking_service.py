@@ -131,3 +131,4 @@ class UsageTrackingService:
             return prompt_cost + completion_cost
         return 0.0
 
+

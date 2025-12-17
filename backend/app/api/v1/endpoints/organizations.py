@@ -141,3 +141,4 @@ async def delete_organization(
     await db.delete(organization)
     await db.commit()
 
+

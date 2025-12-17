@@ -45,3 +45,4 @@ async def init_db(db: AsyncSession) -> None:
     logger.info("Database initialized successfully")
     logger.info(f"Admin user created: admin@example.com / admin123")
 
+

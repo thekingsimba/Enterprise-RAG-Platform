@@ -2,13 +2,13 @@ from logging.config import fileConfig
 import sys
 from pathlib import Path
 
-from alembic import context  # type: ignore[import-untyped]
-from sqlalchemy import engine_from_config, pool  # type: ignore[import-untyped]
+from alembic import context
+from sqlalchemy import engine_from_config, pool  
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from app.core.config import settings  # type: ignore[import-untyped]
-from app.db.base import Base  # type: ignore[import-untyped]
+from app.core.config import settings  
+from app.db.base import Base  
 
 config = context.config
 

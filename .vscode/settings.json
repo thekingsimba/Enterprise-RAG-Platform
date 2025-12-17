@@ -5,6 +5,7 @@
   ],
   "python.autoComplete.extraPaths": [
     "${workspaceFolder}/backend"
-  ]
+],
+"python-envs.pythonProjects": []
 }
 
